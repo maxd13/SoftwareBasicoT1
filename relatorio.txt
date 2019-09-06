@@ -1,0 +1,148 @@
+Primeiro trabalho de Software Basico.
+Grupo: Luiz Carlos Rumbelsperger Viana - 1810936.
+Turma: 3WB
+
+O codigo inteiro funciona perfeitamente bem e e' auto-explicativo.
+
+Forma como foram compilados e linkados os modulos: gcc -Wall -lm -o teste grava_structs.c teste.c
+OBS: -lm foi adicionado devido ao uso da biblioteca math.h
+
+Forma como foram visualizados os arquivos gerados:
+xxd -b saida
+xxd -b saidaL
+xxd -b saida2L
+hexdump -C saida
+hexdump -C saidaL
+hexdump -C saida2L
+
+Forma como foi testado o modulo grava_structs.c:
+
+<modulo teste.c>
+#include "grava_structs.h"
+struct s {
+    int i1;
+    long l1;
+    short s1;
+    char c1;
+    short s2;
+  };
+
+struct s2 {
+    long l1;
+    char c1;
+    long l2;
+    int s1;
+  };
+
+
+int main(int argc, char const *argv[])
+{
+    struct s exemplo[4] = {// cada campo de tamanho n tem o valor do succesor do maior valor do tipo anterior.
+                           {65536, 4294967296, 256, 128, 256}, 
+                           //primeiros n/2 bytes de cada campo sao 0xFF.
+                           {65535, 4294967295, 255, 255, 255},
+                           //tudo com o maior valor possivel. Todos os bytes 0xFF.
+                           {4294967295, 0xFFFFFFFFFFFFFFFF, 65535, 255, 65535},
+                           //tudo 0.
+                           {0, 0, 0, 0, 0}
+                          };
+
+    struct s2 exemplo2[3] = {//tudo 80
+                             {0x8080808080808080, 128, 0x8080808080808080, 0x80808080},
+                             {1, 2, 3, 4},
+                             //0xFF em posicoes pares do primeiro long, 0xFF na diagonal depois, o resto 0.
+                             {0xFF00FF00FF00FF00, 0xFF, 0xFF << 8,0xFF << 8*2}
+                            };
+
+    //espera-se o mesmo resultado mostrado independente da arquitetura escolhida, 
+    //mas os arquivos devem estar diferentes.
+    grava_structs(4, exemplo, "ilscs", 'B', "saida");
+    grava_structs(4, exemplo, "ilscs", 'L', "saidaL");
+    grava_structs(3, exemplo2, "lcli", 'L', "saida2L");
+    printf("saida:\n");
+    dump_structs("saida");
+    printf("\nsaidaL:\n");
+    dump_structs("saidaL");
+    printf("\nsaida2L:\n");
+    dump_structs("saida2L");
+
+
+    return 0;
+}
+
+Output:
+
+saida:
+B
+4
+*
+00 00 01 00 
+00 00 00 00 01 00 00 00 
+00 01 
+80 
+00 01 
+*
+FF FF 00 00 
+FF FF FF FF 00 00 00 00 
+FF 00 
+FF 
+FF 00 
+*
+FF FF FF FF 
+FF FF FF FF FF FF FF FF 
+FF FF 
+FF 
+FF FF 
+*
+00 00 00 00 
+00 00 00 00 00 00 00 00 
+00 00 
+00 
+00 00 
+
+saidaL:
+L
+4
+*
+00 00 01 00 
+00 00 00 00 01 00 00 00 
+00 01 
+80 
+00 01 
+*
+FF FF 00 00 
+FF FF FF FF 00 00 00 00 
+FF 00 
+FF 
+FF 00 
+*
+FF FF FF FF 
+FF FF FF FF FF FF FF FF 
+FF FF 
+FF 
+FF FF 
+*
+00 00 00 00 
+00 00 00 00 00 00 00 00 
+00 00 
+00 
+00 00 
+
+saida2L:
+L
+3
+*
+80 80 80 80 80 80 80 80 
+80 
+80 80 80 80 80 80 80 80 
+80 80 80 80 
+*
+01 00 00 00 00 00 00 00 
+02 
+03 00 00 00 00 00 00 00 
+04 00 00 00 
+*
+00 FF 00 FF 00 FF 00 FF 
+FF 
+00 FF 00 00 00 00 00 00 
+00 00 FF 00
